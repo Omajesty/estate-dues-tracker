@@ -5,7 +5,7 @@ DB_FILE = "estate_records.txt"
 DIARY_FILE = "estate_diary.txt"
 
 def start():
-    """Creates the files with basic sections if they do not exist."""
+    """Creates the txt files with sections that looks like a database"""
     if not os.path.exists(DB_FILE):
         with open(DB_FILE, "w", encoding="utf-8") as f:
             f.write("[Estate Members]\n\n[Payment Records]\n")
@@ -29,7 +29,7 @@ def load_raw_data():
     with open(DB_FILE, "r", encoding="utf-8") as f:
         lines = f.readlines()
         
-    # Check if the section titles exist anywhere in the file
+    
     has_members = False
     has_payments = False
     for line in lines:

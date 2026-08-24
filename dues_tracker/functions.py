@@ -1,7 +1,7 @@
 from .data_management import load_raw_data, save_raw_data, log_event
 
 def add_member(member_name):
-    """Counts current members, creates a new sequential ID, and adds them."""
+    """A function to count current members, create a new sequential ID, and add them."""
     try:
         lines = load_raw_data()
     except ValueError as e:
@@ -11,7 +11,7 @@ def add_member(member_name):
     if name_clean == "":
         return False, "Member name cannot be empty."
 
-    # Count how many members are already registered to decide the next ID
+    
     member_count = 0
     counting = False
     for line in lines:
@@ -23,10 +23,10 @@ def add_member(member_name):
         if counting and line.strip().startswith("ID:"):
             member_count = member_count + 1
 
-    # Formats number into simple ID style (e.g., EST-001)
+
     next_id = "EST-" + str(member_count + 1).zfill(3)
     
-    # Locate the member section index to insert the new line right under it
+
     target_index = -1
     for i, line in enumerate(lines):
         if line.strip() == "[Estate Members]":
@@ -52,7 +52,7 @@ def record_payment(member_id, amount, month):
     id_upper = member_id.strip().upper()
     month_clean = month.strip()
     
-    # Ensure amount is valid text that can be a number
+    
     try:
         amount_num = float(amount)
         if amount_num <= 0:
@@ -60,7 +60,7 @@ def record_payment(member_id, amount, month):
     except ValueError:
         return False, "Amount must be a number."
 
-    # Look through the file to verify if this member ID exists
+
     id_exists = False
     for line in lines:
         if line.strip().startswith("ID: " + id_upper + " |"):
@@ -70,7 +70,7 @@ def record_payment(member_id, amount, month):
     if not id_exists:
         return False, "Member ID " + id_upper + " is not registered."
 
-    # Locate the payment section index
+
     payment_index = -1
     for i, line in enumerate(lines):
         if line.strip() == "[Payment Records]":

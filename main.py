@@ -72,7 +72,7 @@ def run_menu():
                         print("  No transactions posted for this profile.")
 
             elif choice == "5":
-                print("\nShutting down system securely. Goodbye, Chairman!")
+                print("\nGoodbye")
                 break
             else:
                 print("\nInvalid selection. Please choose an option from 1 to 5.")

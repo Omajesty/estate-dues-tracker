@@ -55,7 +55,7 @@ def generate_monthly_status(target_month):
     members, payments = parse_database()
     month_query = target_month.strip().lower()
     
-    # Collect IDs of everyone who paid for this month
+   
     paid_ids = []
     for payment in payments:
         if payment["month"].lower() == month_query:
@@ -64,7 +64,7 @@ def generate_monthly_status(target_month):
     up_to_date = []
     owing = []
     
-    # Sort members based on whether their ID is in the paid list
+   
     for m_id, name in members.items():
         member_data = {"id": m_id, "name": name}
         if m_id in paid_ids:
