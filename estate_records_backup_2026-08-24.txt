@@ -1,0 +1,6 @@
+[Estate Members]
+ID: EST-002 | Name: Matty Gray
+ID: EST-001 | Name: Benjamin Hastings
+
+[Payment Records]
+ID: EST-001 | Month: August 2026 | Amount: 5000.0 | Status: Paid

@@ -85,3 +85,64 @@ def record_payment(member_id, amount, month):
         return True, "Payment recorded successfully."
 
     return False, "Payment Records section header is missing."
+
+def import_members_from_file(import_filename="new_members.txt"):
+    """Reads a text file line-by-line and imports members dynamically."""
+    import os
+    if not os.path.exists(import_filename):
+        return False, "Import file '" + import_filename + "' not found. Create it first."
+
+    try:
+        with open(import_filename, "r", encoding="utf-8") as f:
+            lines_to_import = f.readlines()
+    except Exception as e:
+        return False, "Failed to read import file: " + str(e)
+
+    success_count = 0
+    skipped_count = 0
+
+    for line in lines_to_import:
+        cleaned_line = line.strip()
+        
+        
+        if cleaned_line == "":
+            continue
+            
+        
+        try:
+            if "," not in cleaned_line:
+                
+                skipped_count = skipped_count + 1
+                continue
+                
+            parts = cleaned_line.split(",")
+            name = parts[0].strip()
+            phone = parts[1].strip()
+            
+            
+            if name == "" or phone == "":
+                skipped_count = skipped_count + 1
+                continue
+                
+            
+            member_details = name + " (Phone: " + phone + ")"
+            
+            
+            success, result = add_member(member_details)
+            
+            if success:
+                success_count = success_count + 1
+            else:
+                skipped_count = skipped_count + 1
+                
+        except Exception:
+            
+            skipped_count = skipped_count + 1
+            continue
+
+    from .database import log_event
+    log_event("IMPORT COMPLETED: Successfully added " + str(success_count) + " members. Skipped " + str(skipped_count) + " bad lines.")
+    
+    summary = "Import complete. Added: " + str(success_count) + " | Skipped/Bad format: " + str(skipped_count)
+    return True, summary
+

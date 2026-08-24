@@ -2,6 +2,8 @@ import dues_tracker
 from dues_tracker import functions
 import dues_tracker.reports as report_engine
 
+from dues_tracker.data_management import create_backup
+
 def run_menu():
     try:
         dues_tracker.start()
@@ -18,10 +20,12 @@ def run_menu():
         print("2. Record Dues Payment")
         print("3. Check Dues Status (Paid vs Owing)")
         print("4. View Member Full Payment History")
-        print("5. Exit System")
+        print("5. Create Dated Data Backup (Snapshot)")
+        print("6. Import Members from new_members.txt")
+        print("7. Exit System")
         print("==========================================")
         
-        choice = input("Select an option (1-5): ").strip()
+        choice = input("Select an option (1-7): ").strip()
         
         try:
             if choice == "1":
@@ -72,10 +76,25 @@ def run_menu():
                         print("  No transactions posted for this profile.")
 
             elif choice == "5":
+                success, response = create_backup()
+                if success:
+                    print("\nSuccess: Backup file created -> " + response)
+                else:
+                    print("\nError: Could not back up data. " + response)
+
+            elif choice == "6":
+                print("\nAttempting to import from 'new_members.txt'...")
+                success, response = functions.import_members_from_file("new_members.txt")
+                if success:
+                    print("\nSuccess! " + response)
+                else:
+                    print("\nError: " + response)
+
+            elif choice == "7":
                 print("\nGoodbye")
                 break
             else:
-                print("\nInvalid selection. Please choose an option from 1 to 5.")
+                print("\nInvalid selection. Please choose an option from 1 to 7.")
                 
         except ValueError as file_error:
             print("\n[File Corruption Detected] " + str(file_error))

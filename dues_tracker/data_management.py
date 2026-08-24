@@ -47,3 +47,26 @@ def save_raw_data(lines):
     """Writes the updated list of lines back to the text file."""
     with open(DB_FILE, "w", encoding="utf-8") as f:
         f.writelines(lines)
+
+def create_backup():
+    """Creates a dated copy of the current estate records file."""
+    if not os.path.exists(DB_FILE):
+        return False, "No data file exists yet to back up."
+        
+    try:
+        
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        backup_filename = "estate_records_backup_" + date_str + ".txt"
+        
+  
+        with open(DB_FILE, "r", encoding="utf-8") as source:
+            data = source.read()
+            
+    
+        with open(backup_filename, "w", encoding="utf-8") as target:
+            target.write(data)
+            
+        log_event("BACKUP CREATED: Saved snapshot as " + backup_filename)
+        return True, backup_filename
+    except Exception as e:
+        return False, str(e)
