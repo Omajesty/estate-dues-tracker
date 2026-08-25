@@ -140,7 +140,7 @@ def import_members_from_file(import_filename="new_members.txt"):
             skipped_count = skipped_count + 1
             continue
 
-    from .database import log_event
+    from .data_management import log_event
     log_event("IMPORT COMPLETED: Successfully added " + str(success_count) + " members. Skipped " + str(skipped_count) + " bad lines.")
     
     summary = "Import complete. Added: " + str(success_count) + " | Skipped/Bad format: " + str(skipped_count)
