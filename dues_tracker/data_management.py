@@ -1,72 +1,183 @@
-import os
+import json
+import shutil
 from datetime import datetime
+from pathlib import Path
 
-DB_FILE = "estate_records.txt"
-DIARY_FILE = "estate_diary.txt"
 
-def start():
-    """Creates the txt files with sections that looks like a database"""
-    if not os.path.exists(DB_FILE):
-        with open(DB_FILE, "w", encoding="utf-8") as f:
-            f.write("[Estate Members]\n\n[Payment Records]\n")
-        log_event("System Initialized: Created fresh database file.")
-        
-    if not os.path.exists(DIARY_FILE):
-        with open(DIARY_FILE, "w", encoding="utf-8") as f:
-            f.write("=== ESTATE MANAGEMENT DIARY STARTED ===\n")
+# Files are located in the main project folder.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-def log_event(message):
-    """Appends a time-stamped line to the diary."""
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(DIARY_FILE, "a", encoding="utf-8") as f:
-        f.write("[" + current_time + "] " + message + "\n")
+RECORDS_FILE = BASE_DIR / "estate_records.txt"
+DIARY_FILE = BASE_DIR / "estate_diary.txt"
+
+
+def check_db():
+    """Check whether the estate records file exists."""
+
+    return RECORDS_FILE.exists()
+
+
+def create_db():
+    """Create a new empty estate records file."""
+
+    data = {
+        "members": []
+    }
+
+    try:
+        with open(RECORDS_FILE, "w") as file:
+            json.dump(data, file, indent=4)
+
+    except OSError:
+        raise ValueError(
+            "The estate records file could not be created."
+        )
+
 
 def load_raw_data():
-    """Reads lines from the file and checks if headers are missing."""
-    if not os.path.exists(DB_FILE):
-        start()
-        
-    with open(DB_FILE, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-        
-    
-    has_members = False
-    has_payments = False
-    for line in lines:
-        if "[Estate Members]" in line:
-            has_members = True
-        if "[Payment Records]" in line:
-            has_payments = True
-            
-    if not has_members or not has_payments:
-        raise ValueError("The data file headers have been modified or deleted.")
-        
-    return lines
+    """
+    Load the estate records.
 
-def save_raw_data(lines):
-    """Writes the updated list of lines back to the text file."""
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        f.writelines(lines)
+    If no records file exists, create a fresh one.
 
-def create_backup():
-    """Creates a dated copy of the current estate records file."""
-    if not os.path.exists(DB_FILE):
-        return False, "No data file exists yet to back up."
-        
+    If the existing file contains invalid JSON or has
+    an invalid structure, return a human-readable error.
+    """
+
+    if not check_db():
+        create_db()
+
     try:
-        
-        date_str = datetime.now().strftime("%Y-%m-%d")
-        backup_filename = "estate_records_backup_" + date_str + ".txt"
-        
-  
-        with open(DB_FILE, "r", encoding="utf-8") as source:
-            data = source.read()
-            
-    
-        with open(backup_filename, "w", encoding="utf-8") as target:
-            target.write(data)
-            
-        log_event("BACKUP CREATED: Saved snapshot as " + backup_filename)
-        return True, backup_filename
-    except Exception as e:
-        return False, str(e)
+        with open(RECORDS_FILE, "r") as file:
+            data = json.load(file)
+
+    except json.JSONDecodeError:
+        raise ValueError(
+            "The estate records file is damaged or contains "
+            "invalid data."
+        )
+
+    except OSError:
+        raise ValueError(
+            "The estate records file could not be opened."
+        )
+
+    # Check that the main structure is correct.
+    if not isinstance(data, dict):
+        raise ValueError(
+            "The estate records have an invalid format."
+        )
+
+    if "members" not in data:
+        raise ValueError(
+            "The estate records are missing the members section."
+        )
+
+    if not isinstance(data["members"], list):
+        raise ValueError(
+            "The members section must be a list."
+        )
+
+    # Validate each member's basic structure.
+    for member in data["members"]:
+
+        if not isinstance(member, dict):
+            raise ValueError(
+                "The estate records contain an invalid member."
+            )
+
+        required_fields = [
+            "name",
+            "house_no",
+            "dor",
+            "payments"
+        ]
+
+        for field in required_fields:
+            if field not in member:
+                raise ValueError(
+                    f"A member record is missing '{field}'."
+                )
+
+        if not isinstance(member["payments"], list):
+            raise ValueError(
+                "A member's payments must be stored as a list."
+            )
+
+    return data
+
+
+def save_raw_data(data):
+    """Save estate records to the records file."""
+
+    try:
+        with open(RECORDS_FILE, "w") as file:
+            json.dump(data, file, indent=4)
+
+    except OSError:
+        raise ValueError(
+            "The estate records could not be saved."
+        )
+
+
+def get_timestamp():
+    """Return the current date and time."""
+
+    return datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+
+def log_event(message):
+    """
+    Add an event to the estate diary.
+
+    'a' means append, so old diary entries are preserved.
+    """
+
+    try:
+        with open(DIARY_FILE, "a") as file:
+            file.write(
+                f"[{get_timestamp()}] {message}\n"
+            )
+
+    except OSError:
+        print(
+            "Warning: The estate diary could not be updated."
+        )
+
+
+def backup_records():
+    """
+    Create a dated backup of estate_records.txt.
+    """
+
+    if not RECORDS_FILE.exists():
+        return False, (
+            "There are no estate records to back up."
+        )
+
+    timestamp = datetime.now().strftime(
+        "%Y%m%d_%H%M%S"
+    )
+
+    backup_file = (
+        BASE_DIR /
+        f"estate_records_backup_{timestamp}.txt"
+    )
+
+    try:
+        shutil.copy2(
+            RECORDS_FILE,
+            backup_file
+        )
+
+    except OSError:
+        return False, (
+            "The estate records backup could not be created."
+        )
+
+    return True, (
+        f"Backup created successfully:\n"
+        f"{backup_file.name}"
+    )

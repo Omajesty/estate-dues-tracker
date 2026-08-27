@@ -3,3 +3,5 @@
 [2026-08-24 20:45:57] PAYMENT RECORDED: ID EST-001 paid 5000.0 for August 2026
 [2026-08-24 20:47:38] REGISTERED MEMBER: Added EST-002 - Matty Gray
 [2026-08-24 21:26:58] BACKUP CREATED: Saved snapshot as estate_records_backup_2026-08-24.txt
+[2026-08-27 11:36:30] New member registered: Majesty, House 10
+[2026-08-27 11:36:47] Payment recorded: Majesty, House 10, Amount 5000.00, Month August 2026

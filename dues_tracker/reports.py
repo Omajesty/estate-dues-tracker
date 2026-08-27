@@ -1,75 +1,127 @@
-from .data_management import load_raw_data
+from .functions import (
+    check_payment_status,
+    get_all_members,
+    get_all_payments,
+    get_member,
+)
 
-def parse_database():
-    """A helper function to break plain lines into lists for names and payments."""
-    members = {}
-    payments = []
-    
-    lines = load_raw_data()
-    current_section = None
-    
-    for line in lines:
-        cleaned = line.strip()
-        if cleaned == "":
-            continue
-        if cleaned == "[Estate Members]" or cleaned == "[Payment Records]":
-            current_section = cleaned
-            continue
 
-        if current_section == "[Estate Members]" and cleaned.startswith("ID:"):
-            # Splits "ID: EST-001 | Name: John" into pieces
-            parts = cleaned.split("|")
-            m_id = parts[0].replace("ID:", "").strip()
-            name = parts[1].replace("Name:", "").strip()
-            members[m_id] = name
+def show_member(house_no):
+    """Display one member's complete details."""
 
-        elif current_section == "[Payment Records]" and cleaned.startswith("ID:"):
-            parts = cleaned.split("|")
-            m_id = parts[0].replace("ID:", "").strip()
-            month = parts[1].replace("Month:", "").strip()
-            amount = parts[2].replace("Amount:", "").strip()
-            
-            payment_dictionary = {"id": m_id, "month": month, "amount": amount}
-            payments.append(payment_dictionary)
+    success, member = get_member(house_no)
 
-    return members, payments
+    if not success:
+        print(member)
+        return
 
-def fetch_history(member_id):
-    """Finds all payment lines matching a specific member ID."""
-    id_upper = member_id.strip().upper()
-    members, payments = parse_database()
-    
-    if id_upper not in members:
-        return None, "Member ID " + id_upper + " does not exist."
-        
-    user_payments = []
+    print("\n" + "=" * 60)
+    print("MEMBER DETAILS")
+    print("=" * 60)
+
+    print(f"Name: {member['name']}")
+    print(f"House Number: {member['house_no']}")
+    print(f"Date Registered: {member['dor']}")
+
+    print("\nPAYMENT HISTORY")
+    print("-" * 60)
+
+    if not member["payments"]:
+        print("No payments recorded.")
+
+    else:
+        for payment in member["payments"]:
+
+            print(
+                f"Month: {payment['month']} | "
+                f"Amount: {payment['amount']:.2f} | "
+                f"Date: {payment['date']}"
+            )
+
+    print("=" * 60)
+
+
+def show_all_members():
+    """Display all registered members."""
+
+    success, members = get_all_members()
+
+    if not success:
+        print(members)
+        return
+
+    print("\n" + "=" * 60)
+    print("ALL ESTATE MEMBERS")
+    print("=" * 60)
+
+    if not members:
+        print("No members have been registered.")
+        return
+
+    for member in members:
+
+        print(
+            f"House {member['house_no']} | "
+            f"{member['name']} | "
+            f"Payments: {len(member['payments'])}"
+        )
+
+    print("=" * 60)
+
+
+def show_payment_status(month):
+    """Display who has paid and who is owing."""
+
+    success, results = check_payment_status(month)
+
+    if not success:
+        print(results)
+        return
+
+    print("\n" + "=" * 60)
+    print(f"PAYMENT STATUS — {month}")
+    print("=" * 60)
+
+    if not results:
+        print("No members have been registered.")
+        return
+
+    for result in results:
+
+        print(
+            f"House {result['house_no']} | "
+            f"{result['name']} | "
+            f"{result['status']}"
+        )
+
+    print("=" * 60)
+
+
+def show_all_payments():
+    """Display all payments in the estate."""
+
+    success, payments = get_all_payments()
+
+    if not success:
+        print(payments)
+        return
+
+    print("\n" + "=" * 75)
+    print("ALL PAYMENTS")
+    print("=" * 75)
+
+    if not payments:
+        print("No payments have been recorded.")
+        return
+
     for payment in payments:
-        if payment["id"] == id_upper:
-            user_payments.append(payment)
-            
-    result = {"name": members[id_upper], "records": user_payments}
-    return result, None
 
-def generate_monthly_status(target_month):
-    """Sorts all estate members into paid lists or owing lists for a specific month."""
-    members, payments = parse_database()
-    month_query = target_month.strip().lower()
-    
-   
-    paid_ids = []
-    for payment in payments:
-        if payment["month"].lower() == month_query:
-            paid_ids.append(payment["id"])
-            
-    up_to_date = []
-    owing = []
-    
-   
-    for m_id, name in members.items():
-        member_data = {"id": m_id, "name": name}
-        if m_id in paid_ids:
-            up_to_date.append(member_data)
-        else:
-            owing.append(member_data)
-            
-    return up_to_date, owing
+        print(
+            f"{payment['name']} | "
+            f"House {payment['house_no']} | "
+            f"{payment['month']} | "
+            f"{payment['amount']:.2f} | "
+            f"{payment['date']}"
+        )
+
+    print("=" * 75)
